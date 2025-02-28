@@ -6,6 +6,20 @@ import csv from 'csv-parser';
 interface CSVRow {
   name: string;
   rb_br: string;
+  nation: string;
+}
+
+const flags_emoji: { [key: string ]: string } = {
+  "britain":"🇬🇧",
+  "china":"🇨🇳",
+  "france":"🇫🇷",
+  "germany":"🇩🇪",
+  "israel":"🇮🇱",
+  "italy":"🇮🇹",
+  "japan":"🇯🇵",
+  "sweden":"🇸🇪",
+  "usa":"🇺🇸",
+  "ussr":"🇷🇺"
 }
 
 const vehicles: CSVRow[] = [];
@@ -33,7 +47,7 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/find/, (msg) => {
   const chatId = msg.chat.id;
   find_status[chatId] = true;
-  bot.sendMessage(chatId, "What vehicle are you looking for? \n hint: `usa-aviation-A10C`", { parse_mode: 'Markdown' });
+  bot.sendMessage(chatId, "What vehicle are you looking for? \n hint: `a_10c`", { parse_mode: 'Markdown' });
 });
 
 bot.on("message", (msg) => {
@@ -42,27 +56,29 @@ bot.on("message", (msg) => {
 
   if (find_status[chatId] === true && text) {
     const searchResult = findArrayByName(text.trim().toLowerCase());
-    console.log(searchResult);
+    console.log(searchResult.length);
     if (searchResult) {
+        find_status[chatId] = true;
+        if(searchResult.length > 1){
+          let message:string = "Choose your vehicle from the list:\n"
+            searchResult.forEach(element => {
+              message += `/${element.name}\n`;
+          });
         search_status[chatId] = true;
-        let message:string = "Choose your vehicle from the list:\n"
-        searchResult.forEach(element => {
-            message += `/${element.name}\n`;
-        });
-      bot.sendMessage(chatId, message);
+        bot.sendMessage(chatId, message);
+        }else{
+          bot.sendMessage(chatId, vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLocaleLowerCase(), searchResult[0].rb_br,searchResult[0].rb_br));
+        }
       find_status[chatId] = false;
     } else {
       bot.sendMessage(chatId, "Vehicle not found. Please try again.");
     }
-  }
-
-  if (search_status[chatId] === true && text) {
+  }else if (search_status[chatId] === true && text) { 
     let result = findByName(text.slice(1));
+    console.log(text);
     console.log(result);
     if (result) {
-      bot.sendMessage(chatId, `Found vehicle:\nName: ${result.name}\nBR: ${result.rb_br}`);
-    }else{
-      bot.sendMessage(chatId, `something went wrong!`);
+      bot.sendMessage(chatId, vehicle_info_tpl(result.name, result.nation.toLocaleLowerCase(), result.rb_br,result.rb_br));
     }
     search_status[chatId] = false;
   }
@@ -75,4 +91,16 @@ function findArrayByName(name: string): CSVRow[] {
 
 function findByName(name: string): CSVRow | undefined {
   return vehicles.find(vehicle => vehicle.name.toLowerCase() === name);
+}
+
+function vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string): string {
+  console.log(flags_emoji[nation])
+  let message: string = `
+  Found vehicle:
+  Name: ${name}
+  RB BR: ${rb_br}
+  AB BR: ${ab_br}
+  Nation: ${flags_emoji[nation]}
+  `;
+  return message;
 }
