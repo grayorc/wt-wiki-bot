@@ -38,6 +38,23 @@ const bot = new TelegramBot(token, { polling: true });
 let find_status: { [key: number]: boolean } = {};
 let search_status: { [key: number]: boolean } = {};
 
+bot.on('inline_query', (query) => {
+  const queryText = query.query.trim().toLowerCase();
+  const searchResult = findArrayByName(queryText);
+
+  const results: TelegramBot.InlineQueryResultArticle[] = searchResult.map((vehicle, index) => ({
+    type: 'article',
+    id: String(index),
+    title: vehicle.name,
+    description: `RB BR: ${vehicle.rb_br} | Nation: ${flags_emoji[vehicle.nation.toLowerCase()]}`,
+    input_message_content: {
+      message_text: vehicle_info_tpl(vehicle.name, vehicle.nation.toLowerCase(), vehicle.rb_br, vehicle.rb_br)
+    }
+  }));
+
+  bot.answerInlineQuery(query.id, results);
+});
+
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   find_status[chatId] = false;
@@ -67,7 +84,9 @@ bot.on("message", (msg) => {
         search_status[chatId] = true;
         bot.sendMessage(chatId, message);
         }else{
-          bot.sendMessage(chatId, vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLocaleLowerCase(), searchResult[0].rb_br,searchResult[0].rb_br));
+          let imageUrl = `https://natgo.xyz/files/wt/images/garageimages/${searchResult[0].name}.jpg`;
+          bot.sendPhoto(chatId,imageUrl,{ caption: vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLocaleLowerCase(), searchResult[0].rb_br,searchResult[0].rb_br) })
+          // bot.sendMessage(chatId, vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLocaleLowerCase(), searchResult[0].rb_br,searchResult[0].rb_br));
         }
       find_status[chatId] = false;
     } else {
@@ -78,6 +97,12 @@ bot.on("message", (msg) => {
     console.log(text);
     console.log(result);
     if (result) {
+      let imageUrl = `https://natgo.xyz/files/wt/images/garageimages/${result.name}.jpg`;
+      bot.sendPhoto(
+        chatId, 
+        imageUrl ,{ 
+        caption : vehicle_info_tpl(result.name, result.nation.toLocaleLowerCase(), result.rb_br,result.rb_br)
+      });
       bot.sendMessage(chatId, vehicle_info_tpl(result.name, result.nation.toLocaleLowerCase(), result.rb_br,result.rb_br));
     }
     search_status[chatId] = false;
