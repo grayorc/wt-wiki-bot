@@ -8,6 +8,7 @@ interface CSVRow {
   rb_br: string;
   nation: string;
   is_premium: string;
+  cls:string;
 }
 
 const emoji: { [key: string]: string } = {
@@ -63,7 +64,7 @@ bot.on('inline_query', async (query) => {
     description: `RB BR: ${vehicle.rb_br} | Nation: ${emoji[vehicle.nation.toLowerCase()]}`,
     thumb_url: image(vehicle.name),
     input_message_content: {
-      message_text: inline_vehicle_info_tpl(vehicle.name, vehicle.nation.toLowerCase(), vehicle.rb_br, vehicle.rb_br, vehicle.is_premium),
+      message_text: inline_vehicle_info_tpl(vehicle.name, vehicle.nation.toLowerCase(), vehicle.rb_br, vehicle.rb_br, vehicle.is_premium,vehicle.cls),
       parse_mode: 'Markdown'
     }
   }));
@@ -75,6 +76,7 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   find_status[chatId] = false;
   console.log(msg.chat.username)
+  console.log(chatId)
   bot.sendMessage(chatId, "Hi!");
 });
 
@@ -100,7 +102,7 @@ bot.on("message", async (msg) => {
         bot.sendMessage(chatId, message);
       } else {
         bot.sendPhoto(chatId, image(searchResult[0].name), {
-          caption: vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLowerCase(), searchResult[0].rb_br, searchResult[0].rb_br,searchResult[0].is_premium)
+          caption: vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLowerCase(), searchResult[0].rb_br, searchResult[0].rb_br,searchResult[0].is_premium,searchResult[0].cls)
         });
       }
     } else {
@@ -113,7 +115,7 @@ bot.on("message", async (msg) => {
     console.log(result);
     if (result) {
       bot.sendPhoto(chatId, image(result.name), {
-        caption: vehicle_info_tpl(result.name, result.nation.toLowerCase(), result.rb_br, result.rb_br,result.is_premium)
+        caption: vehicle_info_tpl(result.name, result.nation.toLowerCase(), result.rb_br, result.rb_br,result.is_premium,result.cls)
       });
     }
     search_status[chatId] = false;
@@ -124,12 +126,13 @@ function findByName(name: string): CSVRow | undefined {
   return vehicles.find(vehicle => vehicle.name.toLowerCase() === name);
 }
 
-function vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string): string {
+function vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string,cls: string): string {
   let pr_emoji = premium === "TRUE"?`✅`:`❌`;
   let message: string = `
   Found vehicle:
   Name: ${name}
   Nation: ${emoji[nation]}
+  Type: ${cls}
   RB BR: ${rb_br}
   AB BR: ${ab_br}
   Premium: ${pr_emoji}`
@@ -137,15 +140,16 @@ function vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: st
   return message;
 }
 
-function inline_vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string): string {
+function inline_vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string,cls: string): string {
   let pr_emoji = premium === "TRUE"?`✅`:`❌`;
   const imageUrl = image(name);
   return `
   Found vehicle:
   Name: ${name}
+  Nation: ${emoji[nation]}
+  Type: ${cls}
   RB BR: ${rb_br}
   AB BR: ${ab_br}
-  Nation: ${emoji[nation]}
   Premium: ${pr_emoji}
   [Vehicle Image](${imageUrl})
   `;
