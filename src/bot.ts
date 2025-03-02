@@ -6,6 +6,7 @@ import csv from 'csv-parser';
 interface CSVRow {
   name: string;
   rb_br: string;
+  ab_br: string;
   nation: string;
   is_premium: string;
   cls:string;
@@ -102,7 +103,7 @@ bot.on("message", async (msg) => {
         bot.sendMessage(chatId, message);
       } else {
         bot.sendPhoto(chatId, image(searchResult[0].name), {
-          caption: vehicle_info_tpl(searchResult[0].name, searchResult[0].nation.toLowerCase(), searchResult[0].rb_br, searchResult[0].rb_br,searchResult[0].is_premium,searchResult[0].cls)
+          caption: vehicle_info_tpl(searchResult[0])
         });
       }
     } else {
@@ -115,7 +116,7 @@ bot.on("message", async (msg) => {
     console.log(result);
     if (result) {
       bot.sendPhoto(chatId, image(result.name), {
-        caption: vehicle_info_tpl(result.name, result.nation.toLowerCase(), result.rb_br, result.rb_br,result.is_premium,result.cls)
+        caption: vehicle_info_tpl(result)
       });
     }
     search_status[chatId] = false;
@@ -126,30 +127,31 @@ function findByName(name: string): CSVRow | undefined {
   return vehicles.find(vehicle => vehicle.name.toLowerCase() === name);
 }
 
-function vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string,cls: string): string {
-  let pr_emoji = premium === "TRUE"?`✅`:`❌`;
+function vehicle_info_tpl(row: CSVRow): string {
+  let pr_emoji = row.is_premium === "TRUE"?`✅`:`❌`;
   let message: string = `
   Found vehicle:
-  Name: ${name}
-  Nation: ${emoji[nation]}
-  Type: ${cls}
-  RB BR: ${rb_br}
-  AB BR: ${ab_br}
+  Name: ${row.name}
+  Nation: ${emoji[row.nation]}
+  Type: ${row.cls}
+  RB BR: ${row.rb_br}
+  AB BR: ${row.ab_br}
   Premium: ${pr_emoji}`
   ;
   return message;
 }
 
-function inline_vehicle_info_tpl(name: string, nation: string, rb_br: string, ab_br: string,premium: string,cls: string): string {
-  let pr_emoji = premium === "TRUE"?`✅`:`❌`;
-  const imageUrl = image(name);
+function inline_vehicle_info_tpl(row: CSVRow): string {
+  let pr_emoji = row.is_premium === "TRUE"?`✅`:`❌`;
+  const imageUrl = image(row.name);
   return `
   Found vehicle:
-  Name: ${name}
-  Nation: ${emoji[nation]}
-  Type: ${cls}
-  RB BR: ${rb_br}
-  AB BR: ${ab_br}
+  Name: ${row.name}
+  Nation: ${emoji[row.nation]}
+  Type: ${row.cls}
+  RB BR: ${row.rb_br}
+  AB BR: ${row.ab_br}
+  AB BR: ${row.ab_br}
   Premium: ${pr_emoji}
   [Vehicle Image](${imageUrl})
   `;
